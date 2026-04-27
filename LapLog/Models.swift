@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Domain models
 
-struct Lap: Identifiable, Hashable {
+struct Lap: Identifiable, Hashable, Codable {
     let id: UUID
     var index: Int
     var name: String
@@ -23,7 +23,7 @@ struct Lap: Identifiable, Hashable {
     }
 }
 
-struct Session: Identifiable, Hashable {
+struct Session: Identifiable, Hashable, Codable {
     let id: UUID
     var title: String
     var date: Date

@@ -14,16 +14,35 @@ final class AppState: ObservableObject {
     @Published var sessionTitle: String = "Grill"
 
     // MARK: - History
-    @Published var history: [Session] = []
+    @Published var history: [Session] = [] {
+        didSet { persistHistory() }
+    }
     @Published var selectedSession: Session? = nil
 
+    private static let historyStorageKey = "LapLog.history.v1"
+    private static let themeStorageKey = "LapLog.theme.v1"
+    private static let accentStorageKey = "LapLog.accentHex.v1"
+    private static let showQuickStorageKey = "LapLog.showQuick.v1"
+    private static let bigNumeralsStorageKey = "LapLog.bigNumerals.v1"
+    private static let concurrentLapsStorageKey = "LapLog.concurrentLaps.v1"
+
     // MARK: - Settings
-    @Published var theme: AppTheme = .paper
-    @Published var accentHex: UInt32 = 0x1a1916
-    @Published var showQuick: Bool = true
-    @Published var bigNumerals: Bool = true
+    @Published var theme: AppTheme = .paper {
+        didSet { UserDefaults.standard.set(theme.rawValue, forKey: AppState.themeStorageKey) }
+    }
+    @Published var accentHex: UInt32 = 0x1a1916 {
+        didSet { UserDefaults.standard.set(Int(accentHex), forKey: AppState.accentStorageKey) }
+    }
+    @Published var showQuick: Bool = true {
+        didSet { UserDefaults.standard.set(showQuick, forKey: AppState.showQuickStorageKey) }
+    }
+    @Published var bigNumerals: Bool = true {
+        didSet { UserDefaults.standard.set(bigNumerals, forKey: AppState.bigNumeralsStorageKey) }
+    }
     /// When true, each lap keeps timing until the session stops — so multiple laps can run concurrently.
-    @Published var concurrentLaps: Bool = false
+    @Published var concurrentLaps: Bool = false {
+        didSet { UserDefaults.standard.set(concurrentLaps, forKey: AppState.concurrentLapsStorageKey) }
+    }
 
     // MARK: - UI state
     @Published var activeOverlay: AppOverlay = .none
@@ -48,38 +67,44 @@ final class AppState: ObservableObject {
     }
 
     init() {
-        self.history = AppState.seedHistory()
+        self.history = AppState.loadHistory()
+        self.theme = AppState.loadTheme()
+        self.accentHex = AppState.loadAccentHex()
+        self.showQuick = AppState.loadBool(key: AppState.showQuickStorageKey, default: true)
+        self.bigNumerals = AppState.loadBool(key: AppState.bigNumeralsStorageKey, default: true)
+        self.concurrentLaps = AppState.loadBool(key: AppState.concurrentLapsStorageKey, default: false)
     }
 
-    // MARK: - Demo history
+    // MARK: - History persistence
 
-    private static func seedHistory() -> [Session] {
-        func d(_ month: Int, _ day: Int) -> Date {
-            var comps = DateComponents()
-            comps.year = 2026; comps.month = month; comps.day = day
-            return Calendar(identifier: .gregorian).date(from: comps) ?? Date()
+    private static func loadHistory() -> [Session] {
+        guard let data = UserDefaults.standard.data(forKey: historyStorageKey) else { return [] }
+        let decoder = JSONDecoder()
+        return (try? decoder.decode([Session].self, from: data)) ?? []
+    }
+
+    private func persistHistory() {
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(history) {
+            UserDefaults.standard.set(data, forKey: AppState.historyStorageKey)
         }
-        return [
-            Session(title: "Sat cookout", date: d(4, 19), totalMs: 2_745_000, laps: [
-                Lap(index: 1, name: "Coals ready", startMs: 0,          totalMs:   420_000, durationMs: 420_000),
-                Lap(index: 2, name: "Ribeye on",   startMs:   420_000, totalMs: 1_020_000, durationMs: 600_000),
-                Lap(index: 3, name: "Ribeye flip", startMs: 1_020_000, totalMs: 1_860_000, durationMs: 840_000),
-                Lap(index: 4, name: "Ribeye rest", startMs: 1_860_000, totalMs: 2_745_000, durationMs: 885_000)
-            ]),
-            Session(title: "Weeknight steak", date: d(4, 16), totalMs: 1_082_000, laps: [
-                Lap(index: 1, name: "Sear", startMs: 0,         totalMs:   180_000, durationMs: 180_000),
-                Lap(index: 2, name: "Flip", startMs:   180_000, totalMs:   540_000, durationMs: 360_000),
-                Lap(index: 3, name: "Rest", startMs:   540_000, totalMs: 1_082_000, durationMs: 542_000)
-            ]),
-            Session(title: "Friends over", date: d(4, 12), totalMs: 4_210_000, laps: [
-                Lap(index: 1, name: "Veg on",       startMs: 0,         totalMs:   600_000, durationMs: 600_000),
-                Lap(index: 2, name: "Burgers on",   startMs:   600_000, totalMs: 1_260_000, durationMs: 660_000),
-                Lap(index: 3, name: "Burgers flip", startMs: 1_260_000, totalMs: 1_920_000, durationMs: 660_000),
-                Lap(index: 4, name: "Corn on",      startMs: 1_920_000, totalMs: 2_640_000, durationMs: 720_000),
-                Lap(index: 5, name: "Sausages on",  startMs: 2_640_000, totalMs: 3_420_000, durationMs: 780_000),
-                Lap(index: 6, name: "All plated",   startMs: 3_420_000, totalMs: 4_210_000, durationMs: 790_000)
-            ])
-        ]
+    }
+
+    // MARK: - Settings persistence
+
+    private static func loadTheme() -> AppTheme {
+        guard let raw = UserDefaults.standard.string(forKey: themeStorageKey),
+              let t = AppTheme(rawValue: raw) else { return .paper }
+        return t
+    }
+
+    private static func loadAccentHex() -> UInt32 {
+        guard UserDefaults.standard.object(forKey: accentStorageKey) != nil else { return 0x1a1916 }
+        return UInt32(truncatingIfNeeded: UserDefaults.standard.integer(forKey: accentStorageKey))
+    }
+
+    private static func loadBool(key: String, default defaultValue: Bool) -> Bool {
+        UserDefaults.standard.object(forKey: key) as? Bool ?? defaultValue
     }
 
     // MARK: - Stopwatch controls
