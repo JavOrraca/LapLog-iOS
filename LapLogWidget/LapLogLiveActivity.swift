@@ -28,8 +28,9 @@ struct LapLogLiveActivity: Widget {
                         Text("L\(context.state.activeLapNumber)")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                        TimerLabel(state: context.state, kind: .lap)
+                        TimerLabel(state: context.state, kind: .lap, alignment: .trailing)
                             .font(.system(.title3, design: .monospaced).weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -50,12 +51,21 @@ struct LapLogLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                TimerLabel(state: context.state, kind: .total)
-                    .font(.system(.caption, design: .monospaced).weight(.semibold))
-                    .monospacedDigit()
+                HStack(spacing: 3) {
+                    Text("Total:")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    TimerLabel(state: context.state, kind: .total)
+                        .font(.system(.caption, design: .monospaced).weight(.semibold))
+                }
             } compactTrailing: {
-                Text("L\(context.state.activeLapNumber)")
-                    .font(.system(.caption, design: .monospaced).weight(.semibold))
+                HStack(spacing: 3) {
+                    Text("L\(context.state.activeLapNumber):")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    TimerLabel(state: context.state, kind: .lap)
+                        .font(.system(.caption, design: .monospaced).weight(.semibold))
+                }
             } minimal: {
                 Text("L\(context.state.activeLapNumber)")
                     .font(.caption2.weight(.semibold))
@@ -101,9 +111,10 @@ private struct LockScreenView: View {
                     Text("L\(state.activeLapNumber)")
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.5))
-                    TimerLabel(state: state, kind: .lap)
+                    TimerLabel(state: state, kind: .lap, alignment: .trailing)
                         .font(.system(size: 22, weight: .medium, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.9))
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
         }
@@ -119,15 +130,18 @@ private struct TimerLabel: View {
     enum Kind { case total, lap }
     let state: LapLogActivityAttributes.ContentState
     let kind: Kind
+    var alignment: TextAlignment = .leading
 
     var body: some View {
-        if state.isRunning {
-            Text(timerInterval: startDate...Date.distantFuture, countsDown: false)
-                .monospacedDigit()
-        } else {
-            Text(staticFormatted)
-                .monospacedDigit()
+        Group {
+            if state.isRunning {
+                Text(timerInterval: startDate...Date.distantFuture, countsDown: false)
+            } else {
+                Text(staticFormatted)
+            }
         }
+        .monospacedDigit()
+        .multilineTextAlignment(alignment)
     }
 
     private var startDate: Date {
