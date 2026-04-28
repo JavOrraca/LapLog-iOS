@@ -389,6 +389,7 @@ struct SettingsPanel: View {
                     themeSection
                     accentSection
                     displaySection
+                    privacySection
                 }
                 .padding(.top, 8)
                 .padding(.bottom, 24)
@@ -485,6 +486,40 @@ struct SettingsPanel: View {
                 toggleRow(title: "Parallel laps",
                           sub: "Each lap tracks time until session stops",
                           on: $state.concurrentLaps)
+            }
+        }
+    }
+
+    private var privacySection: some View {
+        let p = state.palette
+        return section(title: "PRIVACY") {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("LapLog stores all session data locally on your device. We do not collect, transmit, or store any personal information.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(p.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+
+                Rectangle().fill(p.sep).frame(height: 0.5).padding(.leading, 16)
+
+                Link(destination: URL(string: "https://javorraca.github.io/laplog-privacy/")!) {
+                    HStack {
+                        Text("Read online")
+                            .font(.system(size: 15))
+                            .tracking(-0.2)
+                            .foregroundStyle(p.text)
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(p.muted)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
             }
         }
     }
