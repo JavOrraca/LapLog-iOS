@@ -118,6 +118,7 @@ final class AppState: ObservableObject {
         }
         RunLoop.main.add(t, forMode: .common)
         timer = t
+        startOrUpdateLiveActivity()
     }
 
     func stop() {
@@ -127,6 +128,7 @@ final class AppState: ObservableObject {
         elapsedMs = baseMs
         finalizeConcurrentDurations()
         running = false
+        startOrUpdateLiveActivity()
     }
 
     private func tick() {
@@ -170,6 +172,7 @@ final class AppState: ObservableObject {
                             durationMs: max(0, now - prevTotal)))
         }
         currentLapName = ""
+        startOrUpdateLiveActivity()
     }
 
     func renameLap(at index: Int, to name: String) {
@@ -225,6 +228,48 @@ final class AppState: ObservableObject {
         currentLapName = ""
         pendingStartMs = 0
         sessionTitle = "New"
+        endLiveActivity()
+    }
+
+    // MARK: - Live Activity
+
+    /// Start of the in-progress lap, in session-elapsed ms.
+    /// Sequential: previous lap's finish (or 0). Concurrent: the running pending anchor.
+    private var activeLapStartMs: Int {
+        concurrentLaps ? pendingStartMs : (laps.last?.totalMs ?? 0)
+    }
+
+    private var activeLapElapsedMs: Int {
+        max(0, elapsedMs - activeLapStartMs)
+    }
+
+    /// 1-based number of the lap currently being timed (committed-count + 1).
+    private var activeLapNumber: Int { laps.count + 1 }
+
+    private func liveActivityState() -> LapLogActivityAttributes.ContentState {
+        let now = Date()
+        let total = elapsedMs
+        let lapMs = activeLapElapsedMs
+        return LapLogActivityAttributes.ContentState(
+            sessionStartDate: now.addingTimeInterval(-Double(total) / 1000.0),
+            activeLapStartDate: now.addingTimeInterval(-Double(lapMs) / 1000.0),
+            totalMs: total,
+            activeLapMs: lapMs,
+            activeLapNumber: activeLapNumber,
+            isRunning: running
+        )
+    }
+
+    private func startOrUpdateLiveActivity() {
+        let attrs = LapLogActivityAttributes(
+            sessionTitle: sessionTitle.trimmed.isEmpty ? "Session" : sessionTitle
+        )
+        LiveActivityController.shared.startOrUpdate(state: liveActivityState(),
+                                                    attributes: attrs)
+    }
+
+    private func endLiveActivity() {
+        Task { @MainActor in await LiveActivityController.shared.end() }
     }
 
     // MARK: - History mutations
