@@ -125,10 +125,10 @@ struct ContentView: View {
     private var statusText: String {
         if state.running { return "RUNNING" }
         if state.elapsedMs == 0 { return "READY" }
-        let currentLapMs: Int = {
-            let last = state.laps.last?.totalMs ?? 0
-            return max(0, state.elapsedMs - last)
-        }()
+        let anchor = state.concurrentLaps
+            ? state.pendingStartMs
+            : (state.laps.last?.totalMs ?? 0)
+        let currentLapMs = max(0, state.elapsedMs - anchor)
         if !state.laps.isEmpty {
             return "PAUSED · CURRENT LAP \(fmtLap(currentLapMs).uppercased())"
         }
