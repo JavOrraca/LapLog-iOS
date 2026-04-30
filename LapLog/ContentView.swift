@@ -1,7 +1,14 @@
+import StoreKit
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var state: AppState
+    @Environment(\.requestReview) private var requestReview
+
+    /// Session-count milestones at which to surface the App Store rating prompt.
+    /// Apple's `requestReview` itself caps at ~3 prompts per year, so anything above
+    /// the first hit is best-effort and silently no-ops if the cap is reached.
+    private static let reviewMilestones: Set<Int> = [3, 10, 25]
 
     var body: some View {
         let p = state.palette
@@ -18,6 +25,11 @@ struct ContentView: View {
             }
         }
         .tint(state.accentColor)
+        .onChange(of: state.history.count) { _, newValue in
+            if Self.reviewMilestones.contains(newValue) {
+                requestReview()
+            }
+        }
         .sheet(isPresented: Binding(
             get: { state.activeOverlay == .history },
             set: { if !$0 { state.activeOverlay = .none } }
@@ -125,12 +137,8 @@ struct ContentView: View {
     private var statusText: String {
         if state.running { return "RUNNING" }
         if state.elapsedMs == 0 { return "READY" }
-        let anchor = state.concurrentLaps
-            ? state.pendingStartMs
-            : (state.laps.last?.totalMs ?? 0)
-        let currentLapMs = max(0, state.elapsedMs - anchor)
         if !state.laps.isEmpty {
-            return "PAUSED · CURRENT LAP \(fmtLap(currentLapMs).uppercased())"
+            return "PAUSED · CURRENT LAP \(fmtLap(state.activeLapElapsedMs).uppercased())"
         }
         return "PAUSED"
     }

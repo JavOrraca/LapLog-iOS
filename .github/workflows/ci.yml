@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel in-flight runs on the same branch when a new commit lands.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: macos-15  # ships with recent Xcode toolchains
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Show available Xcodes
+        run: ls /Applications | grep -i xcode || true
+
+      - name: Select Xcode 26.x
+        run: |
+          # Pick the highest-versioned Xcode 26.x available on the runner.
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1)
+          if [ -z "$XCODE" ]; then
+            echo "No Xcode 26.x found; falling back to default-selected Xcode."
+            xcodebuild -version
+          else
+            sudo xcode-select -s "$XCODE/Contents/Developer"
+            xcodebuild -version
+          fi
+
+      - name: Resolve a usable iOS Simulator
+        id: sim
+        run: |
+          # Pick the highest iOS runtime available, prefer iPhone 17 Pro,
+          # fall back to any iPhone destination so CI doesn't hard-require a
+          # specific device that may not exist on the runner image.
+          DEVICE=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $1 }' | sed 's/^ *//;s/ *$//' | grep -E "iPhone (17 Pro|17|16 Pro|16|15 Pro|15)" | head -n 1)
+          if [ -z "$DEVICE" ]; then
+            DEVICE=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ { print $1 }' | sed 's/^ *//;s/ *$//' | head -n 1)
+          fi
+          echo "Using device: $DEVICE"
+          echo "device=$DEVICE" >> "$GITHUB_OUTPUT"
+
+      - name: Build LapLog (Debug)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project LapLog.xcodeproj \
+            -scheme LapLog \
+            -destination "generic/platform=iOS Simulator" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Run unit tests
+        env:
+          # Indirection through env keeps the value out of the run-script
+          # interpolation surface (defense-in-depth against workflow injection,
+          # even though this value originates from xcrun simctl).
+          SIM_DEVICE: ${{ steps.sim.outputs.device }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project LapLog.xcodeproj \
+            -scheme LapLog \
+            -destination "platform=iOS Simulator,name=$SIM_DEVICE" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            test
