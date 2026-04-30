@@ -32,6 +32,13 @@
 			remoteGlobalIDString = 29BA0B542FA03BB600B95E4C;
 			remoteInfo = LapLogWidgetExtension;
 		};
+		E1F2A3B4C5D6E7F8A9B0000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1A1A1A1A1A1A1A1A1A10000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1A1A1A1A1A1A1A1A1A10004;
+			remoteInfo = LapLog;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -50,6 +57,7 @@
 
 /* Begin PBXFileReference section */
 		29BA0B552FA03BB600B95E4C /* LapLogWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LapLogWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1F2A3B4C5D6E7F8A9B00008 /* LapLogTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LapLogTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		29BA0B572FA03BB600B95E4C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		29BA0B592FA03BB600B95E4C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A1A1A1A1A1A1A1A1A1A10005 /* LapLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LapLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +86,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		29BA0B5B2FA03BB600B95E4C /* LapLogWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (29BA0B6B2FA03BB700B95E4C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = LapLogWidget; sourceTree = "<group>"; };
+		E1F2A3B4C5D6E7F8A9B00007 /* LapLogTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LapLogTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +100,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A1A1A1A1A1A1A1A1A1A10007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1F2A3B4C5D6E7F8A9B00006 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -114,6 +130,7 @@
 			children = (
 				A1A1A1A1A1A1A1A1A1A10002 /* LapLog */,
 				29BA0B5B2FA03BB600B95E4C /* LapLogWidget */,
+				E1F2A3B4C5D6E7F8A9B00007 /* LapLogTests */,
 				29BA0B562FA03BB600B95E4C /* Frameworks */,
 				A1A1A1A1A1A1A1A1A1A10003 /* Products */,
 			);
@@ -142,6 +159,7 @@
 			children = (
 				A1A1A1A1A1A1A1A1A1A10005 /* LapLog.app */,
 				29BA0B552FA03BB600B95E4C /* LapLogWidgetExtension.appex */,
+				E1F2A3B4C5D6E7F8A9B00008 /* LapLogTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -190,6 +208,28 @@
 			productReference = A1A1A1A1A1A1A1A1A1A10005 /* LapLog.app */;
 			productType = "com.apple.product-type.application";
 		};
+		E1F2A3B4C5D6E7F8A9B00001 /* LapLogTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1F2A3B4C5D6E7F8A9B00002 /* Build configuration list for PBXNativeTarget "LapLogTests" */;
+			buildPhases = (
+				E1F2A3B4C5D6E7F8A9B00005 /* Sources */,
+				E1F2A3B4C5D6E7F8A9B00006 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E1F2A3B4C5D6E7F8A9B00009 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E1F2A3B4C5D6E7F8A9B00007 /* LapLogTests */,
+			);
+			name = LapLogTests;
+			packageProductDependencies = (
+			);
+			productName = LapLogTests;
+			productReference = E1F2A3B4C5D6E7F8A9B00008 /* LapLogTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -205,6 +245,10 @@
 					};
 					A1A1A1A1A1A1A1A1A1A10004 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					E1F2A3B4C5D6E7F8A9B00001 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = A1A1A1A1A1A1A1A1A1A10004;
 					};
 				};
 			};
@@ -223,6 +267,7 @@
 			targets = (
 				A1A1A1A1A1A1A1A1A1A10004 /* LapLog */,
 				29BA0B542FA03BB600B95E4C /* LapLogWidgetExtension */,
+				E1F2A3B4C5D6E7F8A9B00001 /* LapLogTests */,
 			);
 		};
 /* End PBXProject section */
@@ -254,6 +299,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E1F2A3B4C5D6E7F8A9B00005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1A1A1A1A1A1A1A1A1A10006 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -278,6 +330,11 @@
 			isa = PBXTargetDependency;
 			target = 29BA0B542FA03BB600B95E4C /* LapLogWidgetExtension */;
 			targetProxy = 29BA0B652FA03BB700B95E4C /* PBXContainerItemProxy */;
+		};
+		E1F2A3B4C5D6E7F8A9B00009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1A1A1A1A1A1A1A1A1A10004 /* LapLog */;
+			targetProxy = E1F2A3B4C5D6E7F8A9B0000A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -529,6 +586,60 @@
 			};
 			name = Release;
 		};
+		E1F2A3B4C5D6E7F8A9B00003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YNYFAC93MP;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.javierorraca.LapLogTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LapLog.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LapLog";
+			};
+			name = Debug;
+		};
+		E1F2A3B4C5D6E7F8A9B00004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YNYFAC93MP;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.javierorraca.LapLogTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LapLog.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LapLog";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -555,6 +666,15 @@
 			buildConfigurations = (
 				A1A1A1A1A1A1A1A1A1A10014 /* Debug */,
 				A1A1A1A1A1A1A1A1A1A10015 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1F2A3B4C5D6E7F8A9B00002 /* Build configuration list for PBXNativeTarget "LapLogTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1F2A3B4C5D6E7F8A9B00003 /* Debug */,
+				E1F2A3B4C5D6E7F8A9B00004 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

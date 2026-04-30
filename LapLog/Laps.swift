@@ -59,12 +59,7 @@ struct LapsListView: View {
     }
 
     private var showsCurrentLapRow: Bool {
-        guard state.elapsedMs > 0 else { return false }
-        if state.concurrentLaps {
-            return state.elapsedMs > state.pendingStartMs
-        }
-        if state.laps.isEmpty { return true }
-        return state.elapsedMs > state.laps.last!.totalMs
+        state.elapsedMs > 0 && state.elapsedMs > state.activeLapStart
     }
 }
 
@@ -76,9 +71,8 @@ struct CurrentLapRow: View {
 
     var body: some View {
         let p = state.palette
-        let idx = state.laps.count + 1
-        let anchor = state.concurrentLaps ? state.pendingStartMs : (state.laps.last?.totalMs ?? 0)
-        let curr = max(0, state.elapsedMs - anchor)
+        let idx = state.activeLapNumber
+        let curr = state.activeLapElapsedMs
 
         HStack(spacing: 12) {
             Text(String(format: "%02d", idx))

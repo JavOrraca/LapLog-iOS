@@ -26,22 +26,27 @@ final class AppState: ObservableObject {
     private static let bigNumeralsStorageKey = "LapLog.bigNumerals.v1"
     private static let concurrentLapsStorageKey = "LapLog.concurrentLaps.v1"
 
+    /// UserDefaults backing for history + settings. Test code can inject an
+    /// isolated suite to keep test runs from polluting one another or the
+    /// real app's saved state.
+    private let defaults: UserDefaults
+
     // MARK: - Settings
     @Published var theme: AppTheme = .paper {
-        didSet { UserDefaults.standard.set(theme.rawValue, forKey: AppState.themeStorageKey) }
+        didSet { defaults.set(theme.rawValue, forKey: AppState.themeStorageKey) }
     }
     @Published var accentHex: UInt32 = 0x1a1916 {
-        didSet { UserDefaults.standard.set(Int(accentHex), forKey: AppState.accentStorageKey) }
+        didSet { defaults.set(Int(accentHex), forKey: AppState.accentStorageKey) }
     }
     @Published var showQuick: Bool = true {
-        didSet { UserDefaults.standard.set(showQuick, forKey: AppState.showQuickStorageKey) }
+        didSet { defaults.set(showQuick, forKey: AppState.showQuickStorageKey) }
     }
     @Published var bigNumerals: Bool = true {
-        didSet { UserDefaults.standard.set(bigNumerals, forKey: AppState.bigNumeralsStorageKey) }
+        didSet { defaults.set(bigNumerals, forKey: AppState.bigNumeralsStorageKey) }
     }
     /// When true, each lap keeps timing until the session stops — so multiple laps can run concurrently.
     @Published var concurrentLaps: Bool = false {
-        didSet { UserDefaults.standard.set(concurrentLaps, forKey: AppState.concurrentLapsStorageKey) }
+        didSet { defaults.set(concurrentLaps, forKey: AppState.concurrentLapsStorageKey) }
     }
 
     // MARK: - UI state
@@ -51,6 +56,10 @@ final class AppState: ObservableObject {
     private var timer: Timer?
     private var startedAt: TimeInterval = 0
     private var baseMs: Int = 0
+
+    // MARK: - Haptics (prepared lazily; iOS recycles after a short idle window).
+    private let primaryHaptic = UIImpactFeedbackGenerator(style: .medium)
+    private let lapHaptic = UIImpactFeedbackGenerator(style: .light)
     /// In parallel mode, when the currently-un-committed lap began. Bumped on each Lap press.
     @Published private(set) var pendingStartMs: Int = 0
 
@@ -66,19 +75,20 @@ final class AppState: ObservableObject {
         [0xc2410c, 0x0a7c41, 0x1e5fbf, 0x8b4fbf, 0xb3142f, themeMonochromeAccent]
     }
 
-    init() {
-        self.history = AppState.loadHistory()
-        self.theme = AppState.loadTheme()
-        self.accentHex = AppState.loadAccentHex()
-        self.showQuick = AppState.loadBool(key: AppState.showQuickStorageKey, default: true)
-        self.bigNumerals = AppState.loadBool(key: AppState.bigNumeralsStorageKey, default: true)
-        self.concurrentLaps = AppState.loadBool(key: AppState.concurrentLapsStorageKey, default: false)
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        self.history = loadHistory()
+        self.theme = loadTheme()
+        self.accentHex = loadAccentHex()
+        self.showQuick = loadBool(key: AppState.showQuickStorageKey, default: true)
+        self.bigNumerals = loadBool(key: AppState.bigNumeralsStorageKey, default: true)
+        self.concurrentLaps = loadBool(key: AppState.concurrentLapsStorageKey, default: false)
     }
 
     // MARK: - History persistence
 
-    private static func loadHistory() -> [Session] {
-        guard let data = UserDefaults.standard.data(forKey: historyStorageKey) else { return [] }
+    private func loadHistory() -> [Session] {
+        guard let data = defaults.data(forKey: AppState.historyStorageKey) else { return [] }
         let decoder = JSONDecoder()
         return (try? decoder.decode([Session].self, from: data)) ?? []
     }
@@ -86,25 +96,25 @@ final class AppState: ObservableObject {
     private func persistHistory() {
         let encoder = JSONEncoder()
         if let data = try? encoder.encode(history) {
-            UserDefaults.standard.set(data, forKey: AppState.historyStorageKey)
+            defaults.set(data, forKey: AppState.historyStorageKey)
         }
     }
 
     // MARK: - Settings persistence
 
-    private static func loadTheme() -> AppTheme {
-        guard let raw = UserDefaults.standard.string(forKey: themeStorageKey),
+    private func loadTheme() -> AppTheme {
+        guard let raw = defaults.string(forKey: AppState.themeStorageKey),
               let t = AppTheme(rawValue: raw) else { return .paper }
         return t
     }
 
-    private static func loadAccentHex() -> UInt32 {
-        guard UserDefaults.standard.object(forKey: accentStorageKey) != nil else { return 0x1a1916 }
-        return UInt32(truncatingIfNeeded: UserDefaults.standard.integer(forKey: accentStorageKey))
+    private func loadAccentHex() -> UInt32 {
+        guard defaults.object(forKey: AppState.accentStorageKey) != nil else { return 0x1a1916 }
+        return UInt32(truncatingIfNeeded: defaults.integer(forKey: AppState.accentStorageKey))
     }
 
-    private static func loadBool(key: String, default defaultValue: Bool) -> Bool {
-        UserDefaults.standard.object(forKey: key) as? Bool ?? defaultValue
+    private func loadBool(key: String, default defaultValue: Bool) -> Bool {
+        defaults.object(forKey: key) as? Bool ?? defaultValue
     }
 
     // MARK: - Stopwatch controls
@@ -113,11 +123,15 @@ final class AppState: ObservableObject {
         guard !running else { return }
         startedAt = CACurrentMediaTime()
         running = true
-        let t = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+        // 30 Hz: half the wake-ups of 60 Hz with still-acceptable centisecond smoothness.
+        let t = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
         RunLoop.main.add(t, forMode: .common)
         timer = t
+        primaryHaptic.impactOccurred()
+        primaryHaptic.prepare()
+        lapHaptic.prepare() // ready for the first Lap tap
         startOrUpdateLiveActivity()
     }
 
@@ -128,6 +142,8 @@ final class AppState: ObservableObject {
         elapsedMs = baseMs
         finalizeConcurrentDurations()
         running = false
+        primaryHaptic.impactOccurred()
+        primaryHaptic.prepare()
         startOrUpdateLiveActivity()
     }
 
@@ -172,6 +188,8 @@ final class AppState: ObservableObject {
                             durationMs: max(0, now - prevTotal)))
         }
         currentLapName = ""
+        lapHaptic.impactOccurred()
+        lapHaptic.prepare()
         startOrUpdateLiveActivity()
     }
 
@@ -235,16 +253,18 @@ final class AppState: ObservableObject {
 
     /// Start of the in-progress lap, in session-elapsed ms.
     /// Sequential: previous lap's finish (or 0). Concurrent: the running pending anchor.
-    private var activeLapStartMs: Int {
+    /// Public so views and tests can read it; the unit tests rely on this contract.
+    var activeLapStart: Int {
         concurrentLaps ? pendingStartMs : (laps.last?.totalMs ?? 0)
     }
 
-    private var activeLapElapsedMs: Int {
-        max(0, elapsedMs - activeLapStartMs)
+    /// Elapsed time of the in-progress lap, in ms. `max(0, elapsedMs - activeLapStart)`.
+    var activeLapElapsedMs: Int {
+        max(0, elapsedMs - activeLapStart)
     }
 
     /// 1-based number of the lap currently being timed (committed-count + 1).
-    private var activeLapNumber: Int { laps.count + 1 }
+    var activeLapNumber: Int { laps.count + 1 }
 
     private func liveActivityState() -> LapLogActivityAttributes.ContentState {
         let now = Date()
