@@ -165,4 +165,30 @@ struct LapMathTests {
         #expect(s.currentLapName.isEmpty)
         #expect(s.pendingStartMs == 0)
     }
+
+    // MARK: - Lap-name editing flag (drives keyboard-avoidance UI)
+
+    @Test
+    func isEditingLapNameDefaultsFalse() {
+        let s = makeState()
+        #expect(s.isEditingLapName == false)
+    }
+
+    /// If the user was naming a lap and then archives the session (Reset / "New"),
+    /// the CurrentLapRow disappears and its TextField's focus binding goes out of
+    /// scope without firing `onChange`. Without a defensive clear here, the flag
+    /// would stay stuck at `true` — and ContentView would keep the timer area
+    /// hidden indefinitely, even on the next session.
+    @Test
+    func resetAndArchiveClearsIsEditingLapNameFlag() {
+        let s = makeState()
+        s.running = true
+        s.elapsedMs = 10_000
+        s.addLap()
+        s.isEditingLapName = true   // simulate the user tapping the lap-name field
+
+        s.resetAndArchive()
+
+        #expect(s.isEditingLapName == false)
+    }
 }

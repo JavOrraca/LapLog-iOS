@@ -51,6 +51,10 @@ final class AppState: ObservableObject {
 
     // MARK: - UI state
     @Published var activeOverlay: AppOverlay = .none
+    /// True while the user is actively editing the current lap's name. Drives the
+    /// keyboard-avoidance fix in `ContentView`: when the keyboard slides up, the
+    /// 300pt timer ring is hidden so the field can sit above the keyboard.
+    @Published var isEditingLapName: Bool = false
 
     // MARK: - Internal timing
     private var timer: Timer?
@@ -246,6 +250,10 @@ final class AppState: ObservableObject {
         currentLapName = ""
         pendingStartMs = 0
         sessionTitle = "New"
+        // Defensive: when CurrentLapRow disappears here, its TextField's focus
+        // binding goes out of scope without firing onChange — so the editing
+        // flag would otherwise stay stuck at true and keep the timer hidden.
+        isEditingLapName = false
         endLiveActivity()
     }
 
