@@ -88,6 +88,23 @@ struct CurrentLapRow: View {
                     .foregroundStyle(p.text)
                     .autocorrectionDisabled()
                     .submitLabel(.done)
+                    .onSubmit { focused = false }
+                    .onChange(of: focused) { _, isFocused in
+                        // Tell ContentView to collapse the 300pt timer ring so the
+                        // field can sit above the keyboard. Without this, the
+                        // ScrollView gets squeezed to ~0pt and the field hides.
+                        withAnimation(.easeInOut(duration: 0.22)) {
+                            state.isEditingLapName = isFocused
+                        }
+                    }
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") { focused = false }
+                                .foregroundStyle(state.accentColor)
+                                .fontWeight(.semibold)
+                        }
+                    }
 
                 if state.running {
                     PulseDot(color: state.accentColor)

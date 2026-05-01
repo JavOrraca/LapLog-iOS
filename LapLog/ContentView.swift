@@ -17,8 +17,15 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 topBar
-                timerArea
-                    .padding(.bottom, 6)
+                // Hide the 300pt timer ring while the user is naming a lap so the
+                // text field has room above the keyboard. The active-lap time stays
+                // visible on the right side of the lap row, so timing context isn't
+                // lost. Layout collapses with an animation driven by AppState.
+                if !state.isEditingLapName {
+                    timerArea
+                        .padding(.bottom, 6)
+                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                }
                 controls
                 ScrollView { LapsListView() }
                     .background(p.card)
